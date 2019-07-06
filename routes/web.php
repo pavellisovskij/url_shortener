@@ -11,6 +11,11 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', 'HomeController@index')->name('home');
+
+Route::post('/shortening', 'HomeController@shortening');
+
+Route::get('/404', 'HomeController@error404');
+
+Route::get('/{id}', 'HomeController@redirector');
+
