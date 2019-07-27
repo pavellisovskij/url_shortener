@@ -10,4 +10,10 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    public function debug($data) {
+        echo "<pre>";
+        var_dump($data);
+        echo "</pre>";
+    }
 }

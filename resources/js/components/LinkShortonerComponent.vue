@@ -2,15 +2,33 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <!--<form action="" method="post" enctype="multipart/form-data">-->
-                    <input type="text" name="link" v-model="link">
-                    <button v-on:click="shortening">Сократить</button>
-                <!--</form>-->
-                <div class="card">
-                    <div class="card-header">Ваша короткая сссылка</div>
+                <div class="input-group mb-3">
+                    <input type="text" name="link" v-model="link" class="form-control" placeholder="Вставьте ссылку" aria-label="" aria-describedby="basic-addon1">
+                    <div class="input-group-prepend">
+                        <button v-on:click="shortening" class="btn btn-primary" type="button">Сократить</button>
+                    </div>
+                </div>
 
+                <div class="card" v-if="shortURL">
                     <div class="card-body">
-                        <a :href="shortURL">shortoner.test/{{shortURL}}</a>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td class="text-right" style="border-top: none">Короткая ссылка:</td>
+                                        <td style="border-top: none">
+                                            <a :href="shortURL">{{'shortoner.test/' + shortURL}}</a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-right">Статистика по ссылке:</td>
+                                        <td>
+                                            <a :href="dashboard">{{'shortoner.test' + dashboard}}</a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -23,6 +41,7 @@
         data: function () {
             return {
                 shortURL: "",
+                dashboard: "",
                 link: "",
             }
         },
@@ -35,6 +54,7 @@
                     link: this.link
                 }).then((response) => {
                     this.shortURL = response.data.short_url;
+                    this.dashboard = '/d/' + response.data.short_url;
                 }).catch(error => {
                     // here catch error messages from laravel validator and show them
                 });
