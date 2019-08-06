@@ -35,79 +35,43 @@ class HomeController extends Controller
     /**
      * @param Request $request
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     *
+     * Проверяет есть ли такой же URL в базе
+     * true - возвращает в LinkShortonerComponent старую запись из бд
+     * false - создает новую и записывает туда сокращенную ссылку
      */
     public function shortening(Request $request)
     {
         $link = Url::where('url', Url::cutLink($request->link))->first();
 
-        if (!isset($link->url)) {
-            $now = now();
-
+        if (isset($link->url)) {
+            return response(['short_url' => $link->short_url],200);
+        }
+        else {
             $newUrl = new Url();
             $newUrl->url        = Url::cutLink($request->link);
-            $newUrl->created_at = $now;
+            $newUrl->created_at = now();
             $newUrl->save();
-
-//            $url = Url::where([
-//                ['url', '=', $request->link],
-//                ['created_at', '=', $now]
-//            ])
-//                ->first();
 
             $newUrl->short_url = URL::getShortLinkById($newUrl->id);
             $newUrl->save();
 
             return response(['short_url' => $newUrl->short_url],200);
         }
-        else {
-            return response(['short_url' => $link->short_url],200);
-        }
-
-
     }
-
-//    public function test() {
-//        $alphabet   = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-//        $base       = strlen($alphabet);
-//        $short_url  = "";
-//        $now        = now();
-//        $url        = "http://qaru.site/questions/63111/regular-expression-for-url-validation-in-javascript";
-//        $newUrl = new Url();
-//        $newUrl->url        = $url;
-//        $newUrl->created_at = $now;
-//        $newUrl->save();
-//
-//        $url = Url::where([
-//                ['url', '=', $url],
-//                ['created_at', '=', $now]
-//            ])
-//            ->get();
-//
-//        $id = $url['0']->id;
-//
-//        $id = 196835;
-//        while ($id != 0) {
-//            $remainder = $id % $base;
-//            $id = intval($id / $base);
-//            $short_url = $short_url . $alphabet[$remainder];
-//        }
-//        $short_url = strrev($short_url);
-//        $this->debug($short_url);
-//
-//        $short_url_length = strlen($short_url);
-//        $pos = $id = 0;
-//        while ($short_url_length > 0) {
-//            $id = $id + strpos($alphabet, $short_url[$pos]) * pow($base, $short_url_length - 1);
-//            $pos++;
-//            $short_url_length--;
-//        }
-//        $this->debug($id);
-//    }
 
     public function error404() {
         return view(404);
     }
 
+    /**
+     * @param $path
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
+     *
+     * получает короткую ссылку, получает данные из базы если они есть, если нет -> 404
+     * записывает в бд данные о пользователе перешедшем по ссылке
+     * осуществляет перенаправление
+     */
     public function redirector($path) {
         $url = Url::where('short_url', $path)->first();
 
@@ -138,6 +102,12 @@ class HomeController extends Controller
         }
     }
 
+    /**
+     * @param $path
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     *
+     * выводит информацию о хранящейся в бд ссылке
+     */
     public function dashboard($path) {
         $link = Url::where('short_url', $path)->first();
 
@@ -149,6 +119,12 @@ class HomeController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     *
+     * получает и передает данные для графика отображающего клики по датам в StatisticsComponent
+     */
     public function data1(Request $request) {
         $count = Stat::where('id_url', $request->id)
             ->count();
@@ -188,6 +164,12 @@ class HomeController extends Controller
         ], 200);
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     *
+     * получает и передает данные для графика кликов по городам в StatisticsComponent
+     */
     public function data2(Request $request) {
         $locations = DB::table('statistics')
             ->select(['country', 'city'])

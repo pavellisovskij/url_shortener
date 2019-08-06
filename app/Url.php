@@ -12,6 +12,11 @@ class Url extends Model
 
     protected $table = 'urls';
 
+    /**
+     * @return mixed
+     *
+     * возвращает рандомный IP
+     */
     public static function getIP() {
         $ip = array(
             '86.57.167.254',
@@ -24,6 +29,13 @@ class Url extends Model
         return $ip[$i];
     }
 
+    /**
+     * @param $id
+     * @return string
+     *
+     * кодирует полученный идентификатор в десятичной системе счисления
+     * в 62 систему счисления
+     */
     public static function getShortLinkById($id) {
         $short_url = "";
         while ($id != 0) {
@@ -35,6 +47,12 @@ class Url extends Model
         return $short_url;
     }
 
+    /**
+     * @param $short_url
+     * @return float|int
+     *
+     * декодирует короткую ссылку из 62 системы счисления в идентификатор в десятичной системе
+     */
     public static function getIdByShortLink($short_url) {
         $short_url_length = strlen($short_url);
         $pos = $id = 0;
@@ -46,6 +64,12 @@ class Url extends Model
         return $id;
     }
 
+    /**
+     * @param $link
+     * @return bool|string
+     *
+     * убирает из ссылки протокол
+     */
     public static function cutLink($link) {
         if (Str::is('https://www.*', $link) == true) {
             $url = substr($link, 12);
