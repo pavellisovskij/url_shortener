@@ -1735,12 +1735,25 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
       shortURL: "",
       dashboard: "",
-      link: ""
+      link: "",
+      message: ""
     };
   },
   mounted: function mounted() {
@@ -1750,13 +1763,22 @@ __webpack_require__.r(__webpack_exports__);
     shortening: function shortening() {
       var _this = this;
 
-      axios.post('/shortening', {
-        link: this.link
-      }).then(function (response) {
-        _this.shortURL = response.data.short_url;
-        _this.dashboard = '/d/' + response.data.short_url;
-      })["catch"](function (error) {// here catch error messages from laravel validator and show them
-      });
+      var url = this.link;
+      var regExp = /^((ftp|http|https):\/\/)?(www\.)?([\w-]+\.)?([\w-]+)\.([A-z]{2,})(\/)?((\w-\/\?#%&\.=\+)*)?/;
+      var result = url.search(regExp);
+
+      if (result != -1) {
+        this.message = "";
+        axios.post('/shortening', {
+          link: this.link
+        }).then(function (response) {
+          _this.shortURL = response.data.short_url;
+          _this.dashboard = '/d/' + response.data.short_url;
+        })["catch"](function (error) {// here catch error messages from laravel validator and show them
+        });
+      } else {
+        this.message = "Строка не является ссылкой. Введите ссылку.";
+      }
     }
   }
 });
@@ -69762,7 +69784,7 @@ var render = function() {
             ],
             staticClass: "form-control",
             attrs: {
-              type: "text",
+              type: "url",
               name: "link",
               placeholder: "Вставьте ссылку",
               "aria-label": "",
@@ -69784,6 +69806,7 @@ var render = function() {
               "button",
               {
                 staticClass: "btn btn-primary",
+                staticStyle: { "border-radius": "0px 4px 4px 0px" },
                 attrs: { type: "button" },
                 on: { click: _vm.shortening }
               },
@@ -69831,6 +69854,21 @@ var render = function() {
                 ])
               ])
             ])
+          : _vm._e(),
+        _vm._v(" "),
+        _vm.message
+          ? _c(
+              "div",
+              {
+                staticClass: "p-3 mb-2 bg-danger text-white",
+                staticStyle: { "border-radius": "4px" }
+              },
+              [
+                _vm._v(
+                  "\n                " + _vm._s(_vm.message) + "\n            "
+                )
+              ]
+            )
           : _vm._e()
       ])
     ])

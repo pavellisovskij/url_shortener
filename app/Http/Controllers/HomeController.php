@@ -38,38 +38,78 @@ class HomeController extends Controller
      */
     public function shortening(Request $request)
     {
-        if (Str::is('https://www.*', $request->link) == true) {
-            $link = substr($request->link, 12);
-        } elseif (Str::is('http://www.*', $request->link) == true) {
-            $link = substr($request->link, 11);
-        } elseif (Str::is('www.*', $request->link) == true) {
-            $link = substr($request->link, 4);
-        } elseif (Str::is('http://*', $request->link) == true) {
-            $link = substr($request->link, 7);
-        } elseif (Str::is('https://*', $request->link) == true) {
-            $link = substr($request->link, 8);
-        } else {
-            $link = $request->link;
+        $link = Url::where('url', Url::cutLink($request->link))->first();
+
+        if (!isset($link->url)) {
+            $now = now();
+
+            $newUrl = new Url();
+            $newUrl->url        = Url::cutLink($request->link);
+            $newUrl->created_at = $now;
+            $newUrl->save();
+
+//            $url = Url::where([
+//                ['url', '=', $request->link],
+//                ['created_at', '=', $now]
+//            ])
+//                ->first();
+
+            $newUrl->short_url = URL::getShortLinkById($newUrl->id);
+            $newUrl->save();
+
+            return response(['short_url' => $newUrl->short_url],200);
+        }
+        else {
+            return response(['short_url' => $link->short_url],200);
         }
 
-        $url = Url::where(['url' => $link])->first();
 
-        if (!isset($url)) {
-            $url = new Url();
-            $url->url       = $link;
-            $url->short_url = Str::random(8);
-            $url->save();
-        }
-
-        return response(['short_url' => $url->short_url],200);
     }
+
+//    public function test() {
+//        $alphabet   = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+//        $base       = strlen($alphabet);
+//        $short_url  = "";
+//        $now        = now();
+//        $url        = "http://qaru.site/questions/63111/regular-expression-for-url-validation-in-javascript";
+//        $newUrl = new Url();
+//        $newUrl->url        = $url;
+//        $newUrl->created_at = $now;
+//        $newUrl->save();
+//
+//        $url = Url::where([
+//                ['url', '=', $url],
+//                ['created_at', '=', $now]
+//            ])
+//            ->get();
+//
+//        $id = $url['0']->id;
+//
+//        $id = 196835;
+//        while ($id != 0) {
+//            $remainder = $id % $base;
+//            $id = intval($id / $base);
+//            $short_url = $short_url . $alphabet[$remainder];
+//        }
+//        $short_url = strrev($short_url);
+//        $this->debug($short_url);
+//
+//        $short_url_length = strlen($short_url);
+//        $pos = $id = 0;
+//        while ($short_url_length > 0) {
+//            $id = $id + strpos($alphabet, $short_url[$pos]) * pow($base, $short_url_length - 1);
+//            $pos++;
+//            $short_url_length--;
+//        }
+//        $this->debug($id);
+//    }
 
     public function error404() {
         return view(404);
     }
 
     public function redirector($path) {
-        $url = Url::where(['short_url' => $path])->first();
+        $url = Url::where('short_url', $path)->first();
 
         if (isset($url->url)) {
             $agent = new Agent();
@@ -85,7 +125,13 @@ class HomeController extends Controller
             $stat->country      = $data['country'];
             $stat->clicked_at   = date_format(date_create(now()), 'F Y');
             $stat->save();
-            return redirect('https://' . $url->url);
+
+            if (Str::is('ftp://*', $url->url) == true) {
+                return redirect()->away($url->url);
+            }
+            else {
+                return redirect()->away('https://' . $url->url);
+            }
         }
         else {
             return redirect('/404');

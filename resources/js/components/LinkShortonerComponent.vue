@@ -3,9 +3,17 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="input-group mb-3">
-                    <input type="text" name="link" v-model="link" class="form-control" placeholder="Вставьте ссылку" aria-label="" aria-describedby="basic-addon1">
+                    <input
+                        v-model="link"
+                        type="url"
+                        name="link"
+                        class="form-control"
+                        placeholder="Вставьте ссылку"
+                        aria-label=""
+                        aria-describedby="basic-addon1"
+                    >
                     <div class="input-group-prepend">
-                        <button v-on:click="shortening" class="btn btn-primary" type="button">Сократить</button>
+                        <button v-on:click="shortening" class="btn btn-primary" type="button" style="border-radius: 0px 4px 4px 0px">Сократить</button>
                     </div>
                 </div>
 
@@ -31,6 +39,10 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="p-3 mb-2 bg-danger text-white" style="border-radius: 4px;" v-if="message">
+                    {{message}}
+                </div>
             </div>
         </div>
     </div>
@@ -43,6 +55,7 @@
                 shortURL: "",
                 dashboard: "",
                 link: "",
+                message: "",
             }
         },
         mounted() {
@@ -50,14 +63,24 @@
         },
         methods: {
             shortening: function () {
-                axios.post('/shortening', {
-                    link: this.link
-                }).then((response) => {
-                    this.shortURL = response.data.short_url;
-                    this.dashboard = '/d/' + response.data.short_url;
-                }).catch(error => {
-                    // here catch error messages from laravel validator and show them
-                });
+                var url     = this.link;
+                var regExp  = /^((ftp|http|https):\/\/)?(www\.)?([\w-]+\.)?([\w-]+)\.([A-z]{2,})(\/)?((\w-\/\?#%&\.=\+)*)?/;
+                var result  = url.search(regExp);
+
+                if (result != -1) {
+                    this.message = "";
+                    axios.post('/shortening', {
+                        link: this.link
+                    }).then((response) => {
+                        this.shortURL = response.data.short_url;
+                        this.dashboard = '/d/' + response.data.short_url;
+                    }).catch(error => {
+                        // here catch error messages from laravel validator and show them
+                    });
+                }
+                else {
+                    this.message = "Строка не является ссылкой. Введите ссылку.";
+                }
             }
         }
     }
