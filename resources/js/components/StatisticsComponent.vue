@@ -74,15 +74,14 @@
             this.getData1For1Chart();
             this.getData2For1Chart();
             console.log('StatisticsComponent mounted.');
-            // console.log(this.data);
         },
         methods: {
             getData1For1Chart: function () {
                 axios.get('/data1', {
                     params: {id: this.idLink}
                 }).then((response) => {
-                    this.data1   = response.data.chart[0];
                     this.count  = response.data.count;
+                    this.data1   = response.data.chart[0];
                 }).catch(error => {
                     // here catch error messages from laravel validator and show them
                 });

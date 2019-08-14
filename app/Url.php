@@ -12,6 +12,14 @@ class Url extends Model
 
     protected $table = 'urls';
 
+    public function stat() {
+        $this->hasMany('App\Stat');
+    }
+
+    public function user() {
+        $this->belongsTo('App\User');
+    }
+
     /**
      * @return mixed
      *

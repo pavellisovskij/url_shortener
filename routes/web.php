@@ -11,9 +11,15 @@
 |
 */
 
+Auth::routes();
+
 Route::get('/', 'HomeController@index')->name('home');
 
 Route::get('/test', 'HomeController@test');
+
+Route::get('/get-list', 'HomeController@getList');
+
+Route::delete('/delete-url/{id}', 'HomeController@deleteUrl');
 
 Route::post('/shortening', 'HomeController@shortening');
 

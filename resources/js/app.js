@@ -21,6 +21,7 @@ window.Vue = require('vue');
 
 Vue.component('link-shortoner-component', require('./components/LinkShortonerComponent.vue').default);
 Vue.component('statistics-component', require('./components/StatisticsComponent.vue').default);
+Vue.component('list-component', require('./components/ListComponent.vue').default);
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application

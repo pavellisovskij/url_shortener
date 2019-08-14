@@ -10,11 +10,15 @@
                 </tr>
                 <tr>
                     <td class="text-right">Оригинальная ссылка:</td>
-                    <td><?= $url ?></td>
+                    <td>
+                        <a href="<?= 'https://' . $url ?>"><?= $url ?></a>
+                    </td>
                 </tr>
                 <tr>
                     <td class="text-right">Короткая ссылка:</td>
-                    <td><?= 'shortoner.test/' . $short_url ?></td>
+                    <td>
+                        <a href="<?= '/' . $short_url ?>"> <?= 'shortoner.test/' . $short_url ?> </a>
+                    </td>
                 </tr>
             </tbody>
         </table>

@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Stat;
 use App\Url;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Jenssegers\Agent\Agent;
@@ -17,10 +19,10 @@ class HomeController extends Controller
      *
      * @return void
      */
-//    public function __construct()
-//    {
-//        $this->middleware('auth');
-//    }
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
 
     /**
      * Show the application dashboard.
@@ -42,13 +44,14 @@ class HomeController extends Controller
      */
     public function shortening(Request $request)
     {
-        $link = Url::where('url', Url::cutLink($request->link))->first();
+        $link = Auth::user()->url()->where('url', Url::cutLink($request->link))->first();
 
         if (isset($link->url)) {
             return response(['short_url' => $link->short_url],200);
         }
         else {
             $newUrl = new Url();
+            $newUrl->user_id    = Auth::id();
             $newUrl->url        = Url::cutLink($request->link);
             $newUrl->created_at = now();
             $newUrl->save();
@@ -58,6 +61,20 @@ class HomeController extends Controller
 
             return response(['short_url' => $newUrl->short_url],200);
         }
+    }
+
+    /**
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     *
+     * Передает в LinkListComponent список ссылок для аутентифицированного пользователя
+     */
+    public function getList() {
+        $list = Auth::user()->url()->get();
+        if (!empty($list[0])) {
+            return response(['list' => $list],200);
+        }
+        else return '';
+
     }
 
     public function error404() {
@@ -80,7 +97,7 @@ class HomeController extends Controller
             $data = json_decode(file_get_contents('http://free.ipwhois.io/json/' . Url::getIP()), true);
 
             $stat = new Stat();
-            $stat->id_url       = $url->id;
+            $stat->url_id       = $url->id;
             $stat->browser      = $agent->browser();
             $stat->br_version   = $agent->version($agent->browser());
             $stat->os           = $agent->platform();
@@ -109,7 +126,7 @@ class HomeController extends Controller
      * выводит информацию о хранящейся в бд ссылке
      */
     public function dashboard($path) {
-        $link = Url::where('short_url', $path)->first();
+        $link = Auth::user()->url()->where('short_url', $path)->first();
 
         return view('dashboard', [
             'id'            => $link['id'],
@@ -126,12 +143,12 @@ class HomeController extends Controller
      * получает и передает данные для графика отображающего клики по датам в StatisticsComponent
      */
     public function data1(Request $request) {
-        $count = Stat::where('id_url', $request->id)
+        $count = Stat::where('url_id', $request->id)
             ->count();
 
         $dates = DB::table('statistics')
             ->select(['clicked_at'])
-            ->where('id_url', '=', $request->id)
+            ->where('url_id', '=', $request->id)
             ->distinct()
             ->get();
 
@@ -142,7 +159,7 @@ class HomeController extends Controller
             $data = DB::table('statistics')
                 ->select('clicked_at')
                 ->where([
-                    ['id_url', '=', $request->id],
+                    ['url_id', '=', $request->id],
                     ['clicked_at', '=', $date->clicked_at]
                 ])
                 ->count();
@@ -173,7 +190,7 @@ class HomeController extends Controller
     public function data2(Request $request) {
         $locations = DB::table('statistics')
             ->select(['country', 'city'])
-            ->where('id_url', '=', $request->id)
+            ->where('url_id', '=', $request->id)
             ->distinct()
             ->get();
 
@@ -184,7 +201,7 @@ class HomeController extends Controller
             $data = DB::table('statistics')
                 ->select(['country', 'city'])
                 ->where([
-                    ['id_url', '=', $request->id],
+                    ['url_id', '=', $request->id],
                     ['country', '=', $location->country],
                     ['city', '=', $location->city],
                 ])
@@ -202,5 +219,13 @@ class HomeController extends Controller
                 'data'              =>  $clicks
             ])
         ], 200);
+    }
+
+    public function deleteUrl($id) {
+        $url = Url::findOrFail($id);
+        $stat = Stat::where('url_id', $id)->delete();
+        $url->delete();
+
+        return '';
     }
 }
